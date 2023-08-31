@@ -106,14 +106,23 @@ public class TableCopier : ITableCopier
 IF NOT EXISTS ( SELECT 1 FROM {table.Fullname()} WHERE Id = {row[0]})
 BEGIN
     INSERT INTO {table.Fullname()}
-                ({string.Join(", ", table.Columns.Select(s => s.Name))})
+                ({string.Join(", ", table.Columns.Select(s => s.Safename()))})
                 VALUES ({string.Join(", ", row)}
 )
 END";
 
                     //define the SqlCommand object
                     SqlCommand cmd = new SqlCommand(query, conn, transaction);
-                    cmd.ExecuteNonQuery();
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch(Exception ex)
+                    {
+
+                        throw;
+                    }
+                    
 
                     counter++;
                     progressBar.Report(((double)counter / ((double)count)));
