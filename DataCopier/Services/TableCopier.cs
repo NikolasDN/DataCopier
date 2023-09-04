@@ -50,7 +50,7 @@ public class TableCopier : ITableCopier
 
             using (SqlTransaction transaction = conn.BeginTransaction())
             {
-                SqlCommand cmd1 = new SqlCommand($"SET IDENTITY_INSERT {table.Fullname()} ON", conn, transaction);
+                SqlCommand cmd1 = new SqlCommand($"IF OBJECTPROPERTY(OBJECT_ID('{table.Fullname()}'), 'TableHasIdentity') = 1\r\n SET IDENTITY_INSERT {table.Fullname()} ON", conn, transaction);
                 cmd1.ExecuteNonQuery();
                 transaction.Commit();
             }
@@ -132,7 +132,7 @@ END";
 
             using (SqlTransaction transaction = conn.BeginTransaction())
             {
-                SqlCommand cmd2 = new SqlCommand($"SET IDENTITY_INSERT {table.Fullname()} OFF", conn, transaction);
+                SqlCommand cmd2 = new SqlCommand($"IF OBJECTPROPERTY(OBJECT_ID('{table.Fullname()}'), 'TableHasIdentity') = 1\r\n SET IDENTITY_INSERT {table.Fullname()} OFF", conn, transaction);
                 cmd2.ExecuteNonQuery();
                 transaction.Commit();
             }
@@ -152,7 +152,7 @@ END";
             //retrieve the SQL Server instance version
             string query = @$"SELECT *
                                      FROM {table.Fullname()}
-WHERE Id > 0
+WHERE Id is not null
 ORDER BY Id
 OFFSET     {offset} ROWS       -- skip rows
 FETCH NEXT {size} ROWS ONLY; -- take rows
