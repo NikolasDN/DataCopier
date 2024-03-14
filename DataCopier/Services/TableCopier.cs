@@ -62,7 +62,7 @@ public class TableCopier : ITableCopier
                     // formatting
                     for (int i = 0; i < table.Columns.Count; i++)
                     {
-                        if (table.Columns[i].Type == "datetime2" || table.Columns[i].Type == "date")
+                        if (table.Columns[i].Type == "datetime2" || table.Columns[i].Type == "date" || table.Columns[i].Type == "datetime")
                         {
                             if (DateTime.TryParse(row[i].ToString(), out DateTime dateTime))
                             {
@@ -103,7 +103,7 @@ public class TableCopier : ITableCopier
 
                     //execute the SQLCommand
                     string query = @$"
-IF NOT EXISTS ( SELECT 1 FROM {table.Fullname()} WHERE Id = {row[0]})
+IF NOT EXISTS ( SELECT 1 FROM {table.Fullname()} WHERE {table.Columns[0].Name} = {row[0]})
 BEGIN
     INSERT INTO {table.Fullname()}
                 ({string.Join(", ", table.Columns.Select(s => s.Safename()))})
@@ -144,6 +144,8 @@ END";
 
     private List<object[]> GetList(string connectionString, Table table, int offset, int size)
     {
+        //var primaryKeyColumn = table.GetPrimaryKeyColumn(connectionString);
+
         var result = new List<object[]>();
         //sql connection object
         using (SqlConnection conn = new SqlConnection(connectionString))
@@ -152,8 +154,8 @@ END";
             //retrieve the SQL Server instance version
             string query = @$"SELECT *
                                      FROM {table.Fullname()}
-WHERE Id is not null
-ORDER BY Id
+WHERE {table.Columns[0].Name} is not null
+ORDER BY {table.Columns[0].Name}
 OFFSET     {offset} ROWS       -- skip rows
 FETCH NEXT {size} ROWS ONLY; -- take rows
                                      ";
